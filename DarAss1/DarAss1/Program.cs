@@ -22,6 +22,8 @@ namespace DarAss1
 
             //create table in sql with input text
             SQLiteCommand command = new SQLiteCommand(input, m_dbConnection);
+            command.ExecuteNonQuery();
+            Console.ReadKey();
         }
     }
 }
