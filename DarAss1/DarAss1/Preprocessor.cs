@@ -31,7 +31,7 @@ namespace DarAss1
             List<string> terms = new List<string>();
             Dictionary<string, int> RQF = new Dictionary<string, int>();
 
-            terms.Add("id"); terms.Add("mpg"); terms.Add("cylinders"); terms.Add("displacement"); terms.Add("horsepower"); terms.Add("weight");    
+            terms.Add("id"); terms.Add("mpg"); terms.Add("cylinders"); terms.Add("displacement"); terms.Add("horsepower"); terms.Add("weight");
 
             StreamReader workload = new StreamReader("workload.txt");               // Read the workload
             string line1 = workload.ReadLine();
@@ -44,11 +44,56 @@ namespace DarAss1
                 string[] wQuery = workload.ReadLine().Split();
                 int multiplier = Int32.Parse(wQuery[0]);
 
-                foreach(string t in terms)
+                foreach (string t in terms)
                     if (wQuery.Contains(t)) RQF[t] += multiplier;
             }
 
             Console.ReadKey();
+        }
+
+        public void IDFfill(SQLiteConnection connection, string query)
+        {
+            string[] attributeArray = new string[11] { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
+            
+            //doorloop alle attribuut tabellen
+            for(int t=0; t<11;t++)
+            {
+                //select alle distinct values of the attribute
+                SQLiteCommand command = new SQLiteCommand("SELECT DISTINCT " + attributeArray[t] + " from autotable",connection);
+                connection.Open();
+
+                SQLiteDataReader reader = command.ExecuteReader();
+                //read every row and add values to the attribute's table
+                while(reader.Read())
+                    {
+                    double idf;
+                    if (attributeArray[t] == "brand" || attributeArray[t] == "model" || attributeArray[t] == "type")
+                    {
+                        string value = reader.GetString(0);
+                        idf = catIDF(value);
+                        //insert row into attribute table (insert: value,qf,idf)
+                        SQLiteCommand command2 = new SQLiteCommand("INSERT into " + attributeArray[t] + " VALUES (" + value + ", " + "-1, " + idf + ")", connection);
+                        command2.ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        double value = reader.GetDouble(0);
+                        idf = numIDF(value);
+                    }
+                }
+            }
+        }
+
+        //for calculating idf for categoric values
+        public double catIDF(string term)
+        {
+            return 1.0;
+        }
+
+        //for calculating idf for numeric values
+        public double numIDF(double value)
+        {
+            return 1.0;
         }
     }
 }
