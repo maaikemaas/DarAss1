@@ -13,8 +13,9 @@ namespace DarAss1
         static void Main(string[] args)
         {
             //make connection to database
+            SQLiteConnection.CreateFile("mainDB.sqlite");
             SQLiteConnection m_dbConnection;
-            m_dbConnection = new SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
+            m_dbConnection = new SQLiteConnection("Data Source=mainDB.sqlite;Version=3;");
             m_dbConnection.Open();
 
             //input file with sql things
@@ -23,6 +24,10 @@ namespace DarAss1
             //create table in sql with input text
             SQLiteCommand command = new SQLiteCommand(input, m_dbConnection);
             command.ExecuteNonQuery();
+
+            string test_query = "k = 6, brand = 'volkswagen', cylinders = '6', mpg = '45';";
+            Preprocessor p = new Preprocessor(test_query);
+            
             Console.ReadKey();
         }
 
