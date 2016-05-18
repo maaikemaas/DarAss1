@@ -28,22 +28,10 @@ namespace DarAss1
         public void QFSimilarity(string query, SQLiteConnection meta_connection)      // Updates the metaDB with the QF similarity between the query the user fired and every tuple in the main DB
         {
             // First we calculate the RQF for every term in the user's query
-
             List<string> terms = new List<string>();
             Dictionary<string, int> RQF = new Dictionary<string, int>();
 
-            string[] query_words = query.Split();
-
-            int startLoop = 0;
-            if (query_words[0] == "k") k = Int32.Parse(query_words[2][0].ToString()); startLoop = 3;  // Extract k if it is supplied
-
-            bool nextWordIsTerm = true;
-            for(int i = startLoop; i < query_words.Length; i++)
-            {
-                string word = query_words[i];
-                if (nextWordIsTerm) { terms.Add(word); RQF[word] = 0; nextWordIsTerm = false; }          // The i-th word is a term, we will calculate the RQF for that word later
-                if (word[word.Length - 1] == ',') nextWordIsTerm = true;            // after every comma comes a searchterm
-            }
+            terms.Add("id"); terms.Add("mpg"); terms.Add("cylinders"); terms.Add("displacement"); terms.Add("horsepower"); terms.Add("weight");    
 
             StreamReader workload = new StreamReader("workload.txt");               // Read the workload
             string line1 = workload.ReadLine();
