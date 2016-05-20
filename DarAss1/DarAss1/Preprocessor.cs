@@ -11,18 +11,22 @@ namespace DarAss1
     class Preprocessor
     {
         int k = 10;
+        public double countAutompg = 395;
 
-        public Preprocessor(string mainQuery)       // Constructor for the preprocessor, takes the query the user fired as parameter
+
+        public Preprocessor(SQLiteConnection dbconnection)       // Constructor for the preprocessor, takes the query the user fired as parameter
         {
-            SQLiteConnection.CreateFile("MetaDB.sqlite");       // Create the Meta DB file
-            SQLiteConnection meta_connection = new SQLiteConnection("Data Source=MetaDB.sqlite;Version=3;");
-            meta_connection.Open();
+            System.Globalization.CultureInfo dotProblem = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+            dotProblem.NumberFormat.NumberDecimalSeparator = ".";
 
-            string buildMetaDB = new StreamReader("buildMetaDBtable.txt").ReadToEnd();      // Read from the text file with the CREATE TABLE statements
-            SQLiteCommand cmd = new SQLiteCommand(buildMetaDB, meta_connection);
-            cmd.ExecuteNonQuery();                                                          // Execute the command and fill the MetaDB.sqlite file with 1 table
-
-            QFSimilarity(mainQuery, meta_connection);                                       // Calculate all QF Similarity values, and fills the MetaDB                              
+            System.Threading.Thread.CurrentThread.CurrentCulture = dotProblem;
+            
+            //create metaDB with tables
+            SQLiteConnection meta_connection = createMetaDB();
+            //fill metaDB with IDF's
+            IDFfill(dbconnection, meta_connection);
+            //fill metaDB with QF's
+            //QFSimilarity();    
         }
 
         public void QFSimilarity(string query, SQLiteConnection meta_connection)      // Updates the metaDB with the QF similarity between the query the user fired and every tuple in the main DB
@@ -51,7 +55,7 @@ namespace DarAss1
             Console.ReadKey();
         }
 
-        public void IDFfill(SQLiteConnection connection, string query)
+        public void IDFfill(SQLiteConnection connectionDB, SQLiteConnection connectionMetaDB)
         {
             string[] attributeArray = new string[11] { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
             
@@ -59,41 +63,65 @@ namespace DarAss1
             for(int t=0; t<11;t++)
             {
                 //select alle distinct values of the attribute
-                SQLiteCommand command = new SQLiteCommand("SELECT DISTINCT " + attributeArray[t] + " from autotable",connection);
-                connection.Open();
+                SQLiteCommand command = new SQLiteCommand("SELECT DISTINCT " + attributeArray[t] + " from autompg",connectionDB);
 
                 SQLiteDataReader reader = command.ExecuteReader();
                 //read every row and add values to the attribute's table
                 while(reader.Read())
                     {
                     double idf;
-                    if (attributeArray[t] == "brand" || attributeArray[t] == "model" || attributeArray[t] == "type")
+                    string value;
+
+                    try
                     {
-                        string value = reader.GetString(0);
-                        idf = catIDF(value);
+                        value = reader.GetString(0);
+                    }
+                    catch
+                    {
+                        double doubleValue = reader.GetDouble(0);
+                        value = doubleValue.ToString();
+                    }
+
+
+                        idf = calcIDF(attributeArray[t], value, connectionDB);
                         //insert row into attribute table (insert: value,qf,idf)
-                        SQLiteCommand command2 = new SQLiteCommand("INSERT into " + attributeArray[t] + " VALUES (" + value + ", " + "-1, " + idf + ")", connection);
+                        //Console.WriteLine("value: " + value + " table: " + attributeArray[t] + "idf: " + idf);
+                        string input = "INSERT into " + attributeArray[t] + " VALUES('" + value + "', -1 , " + idf + ")";
+                        //Console.WriteLine(input);
+                        //Console.ReadKey();
+                        SQLiteCommand command2 = new SQLiteCommand(input, connectionMetaDB);
                         command2.ExecuteNonQuery();
-                    }
-                    else
-                    {
-                        double value = reader.GetDouble(0);
-                        idf = numIDF(value);
-                    }
                 }
             }
         }
 
         //for calculating idf for categoric values
-        public double catIDF(string term)
+        public double calcIDF(string column, string term, SQLiteConnection connectionDB)
         {
-            return 1.0;
+            SQLiteCommand command = new SQLiteCommand("SELECT COUNT (*) FROM autompg WHERE " + column + " = '" + term + "'", connectionDB);
+            double dF = Convert.ToInt32(command.ExecuteScalar());
+
+            double result = Math.Log((countAutompg/dF), 2);
+            return result;
         }
 
-        //for calculating idf for numeric values
-        public double numIDF(double value)
+
+        public SQLiteConnection createMetaDB()
         {
-            return 1.0;
+            //make connection to database
+            SQLiteConnection.CreateFile("metaDB.sqlite");
+            SQLiteConnection metadbConnection;
+            metadbConnection = new SQLiteConnection("Data Source=metaDB.sqlite;Version=3;");
+            metadbConnection.Open();
+
+            //input file with sql things
+            string input = new StreamReader("create_metadb.txt").ReadToEnd();
+
+            //create table in sql with input text
+            SQLiteCommand command = new SQLiteCommand(input, metadbConnection);
+            command.ExecuteNonQuery();
+
+            return metadbConnection;
         }
     }
 }

@@ -25,8 +25,10 @@ namespace DarAss1
             SQLiteCommand command = new SQLiteCommand(input, m_dbConnection);
             command.ExecuteNonQuery();
 
+            Preprocessor p = new Preprocessor(m_dbConnection);
+           
             string test_query = "k = 6, brand = 'volkswagen', cylinders = '6', mpg = '45';";
-            Preprocessor p = new Preprocessor(test_query);
+
 
             Console.ReadKey();
         }
