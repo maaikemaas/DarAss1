@@ -1,8 +1,0 @@
-1538 queries (12 unique) parsed in 52 seconds
-6 most frequent queries
-16 times: SELECT * FROM autompg WHERE mpg = '18' AND cylinders = '4' AND displacement = '533' AND horsepower = '100' AND weight = '1000' AND acceleration = '5.4' AND model_year = '1442' AND origin = '1' AND brand = 'buick' AND model = 'skylark_320' AND type = 'sedan'
-7 times: SELECT * FROM autompg WHERE mpg = '153' AND cylinders = '6' AND displacement = '230' AND horsepower = '120' AND weight = '800' AND acceleration = '2.5' AND model_year = '1942' AND origin = '2' AND brand = 'ford' AND model = 'torino' AND type = 'coupe'
-3 times: SELECT * FROM autompg WHERE mpg = '2' AND cylinders = '8' AND displacement = '682' AND horsepower = '460' AND weight = '1600' AND model_year = '2014' AND brand = 'honda' AND model = 'civic'
-1 times: SELECT * FROM autompg WHERE mpg = '73' AND cylinders = '12' AND displacement = '63' AND horsepower = '210' AND brand = 'toyota' AND model = 'aygo'
-1 times: SELECT * FROM autompg WHERE mpg = '89' AND horsepower = '88'
-1 times: SELECT * FROM autompg WHERE horsepower = '680'
