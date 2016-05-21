@@ -8,53 +8,36 @@ using System.IO;
 
 namespace DarAss1
 {
-    class Preprocessor
+    public class Preprocessor
     {
         int k = 10;
-        public double countAutompg = 395;
+        static public double countAutompg = 395;
+        SQLiteConnection metadbconnect;
 
-
-        public Preprocessor(SQLiteConnection dbconnection)       // Constructor for the preprocessor, takes the query the user fired as parameter
+        // Constructor for the preprocessor, takes the query the user fired as parameter
+        public Preprocessor(SQLiteConnection dbconnection)       
         {
+            //makes sure doubles have a dot instead of a comma
             System.Globalization.CultureInfo dotProblem = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
             dotProblem.NumberFormat.NumberDecimalSeparator = ".";
-
             System.Threading.Thread.CurrentThread.CurrentCulture = dotProblem;
             
             //create metaDB with tables
             SQLiteConnection meta_connection = createMetaDB();
+            this.metadbconnect = meta_connection;
+
             //fill metaDB with IDF's
             IDFfill(dbconnection, meta_connection);
             //fill metaDB with QF's
             //QFSimilarity();    
         }
 
-        public void QFSimilarity(string query, SQLiteConnection meta_connection)      // Updates the metaDB with the QF similarity between the query the user fired and every tuple in the main DB
+        // Updates the metaDB with the QF similarity between the query the user fired and every tuple in the main DB
+        public void QFSimilarity(string query, SQLiteConnection meta_connection)      
         {
-            // First we calculate the RQF for every term in the user's query
-            List<string> terms = new List<string>();
-            Dictionary<string, int> RQF = new Dictionary<string, int>();
-
-            terms.Add("id"); terms.Add("mpg"); terms.Add("cylinders"); terms.Add("displacement"); terms.Add("horsepower"); terms.Add("weight");
-
-            StreamReader workload = new StreamReader("workload.txt");               // Read the workload
-            string line1 = workload.ReadLine();
-            string[] line2 = workload.ReadLine().Split();
-            int uniqueQueries = Int32.Parse(line2[0]);                              // No. of unique queries in the workload
-
-
-            for (int i = 0; i < uniqueQueries; i++)
-            {
-                string[] wQuery = workload.ReadLine().Split();
-                int multiplier = Int32.Parse(wQuery[0]);
-
-                foreach (string t in terms)
-                    if (wQuery.Contains(t)) RQF[t] += multiplier;
-            }
-
-            Console.ReadKey();
         }
 
+        //fills the metadb with idf's
         public void IDFfill(SQLiteConnection connectionDB, SQLiteConnection connectionMetaDB)
         {
             string[] attributeArray = new string[11] { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
@@ -64,8 +47,8 @@ namespace DarAss1
             {
                 //select alle distinct values of the attribute
                 SQLiteCommand command = new SQLiteCommand("SELECT DISTINCT " + attributeArray[t] + " from autompg",connectionDB);
-
                 SQLiteDataReader reader = command.ExecuteReader();
+
                 //read every row and add values to the attribute's table
                 while(reader.Read())
                     {
@@ -85,10 +68,7 @@ namespace DarAss1
 
                         idf = calcIDF(attributeArray[t], value, connectionDB);
                         //insert row into attribute table (insert: value,qf,idf)
-                        //Console.WriteLine("value: " + value + " table: " + attributeArray[t] + "idf: " + idf);
                         string input = "INSERT into " + attributeArray[t] + " VALUES('" + value + "', -1 , " + idf + ")";
-                        //Console.WriteLine(input);
-                        //Console.ReadKey();
                         SQLiteCommand command2 = new SQLiteCommand(input, connectionMetaDB);
                         command2.ExecuteNonQuery();
                 }
@@ -105,7 +85,7 @@ namespace DarAss1
             return result;
         }
 
-
+        //create the metadb and the tables
         public SQLiteConnection createMetaDB()
         {
             //make connection to database

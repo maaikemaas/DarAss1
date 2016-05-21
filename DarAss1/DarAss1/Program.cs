@@ -5,12 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
+using System.Windows.Forms;
+using System.Drawing;
+
 
 namespace DarAss1
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             //make connection to database
             SQLiteConnection.CreateFile("mainDB.sqlite");
@@ -27,10 +30,14 @@ namespace DarAss1
 
             Preprocessor p = new Preprocessor(m_dbConnection);
            
-            string test_query = "k = 6, brand = 'volkswagen', cylinders = '6', mpg = '45';";
+            //string test_query = "k = 6, brand = 'volkswagen', cylinders = '6', mpg = '45';";
 
-
+            GUIclass scherm;
+            scherm = new GUIclass(p);
+            Application.Run(scherm);
+            
             Console.ReadKey();
         }
+
     }
 }
