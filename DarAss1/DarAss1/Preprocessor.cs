@@ -29,12 +29,83 @@ namespace DarAss1
             //fill metaDB with IDF's
             IDFfill(dbconnection, meta_connection);
             //fill metaDB with QF's
-            //QFSimilarity();    
+            QFSimilarity(meta_connection);
         }
 
         // Updates the metaDB with the QF similarity between the query the user fired and every tuple in the main DB
-        public void QFSimilarity(string query, SQLiteConnection meta_connection)      
+        public void QFSimilarity(SQLiteConnection meta_connection)      // Updates the metaDB with the QF similarity between the query the user fired and every tuple in the main DB
         {
+            StreamReader workload = new StreamReader("workload.txt");               // Read the workload
+            string line1 = workload.ReadLine();
+            string[] line2 = workload.ReadLine().Split();
+            int uniqueQueries = Int32.Parse(line2[0]);                              // No. of unique queries in the workload
+
+            for (int i = 0; i < uniqueQueries; i++)                                 // Loop over alle unieke queries in de workload heen
+            {
+                string[] wQuery = workload.ReadLine().Split();
+                int multiplier = Int32.Parse(wQuery[0]);                            // Eerste getal van een query in de workload, hoevaak hij voorkomt
+                bool nextWordIsAttr = false;
+                bool nextWordIsVal = false;
+                bool nextWordInClause = false;
+                string currentAttr = "";
+                string currentVal = "";
+                string inClauseString = "";
+                int incount = 0;
+                for (int j = 1; j < wQuery.Length; j++)
+                {
+                    string word = wQuery[j];                         // Huidige woord in de regel
+
+                    if (nextWordIsAttr) currentAttr = word; nextWordIsAttr = false; // Dit woord is een attribuutnaam
+                    if (nextWordIsVal)                                              // Dit woord is een zoekwaarde
+                    {
+                        currentVal += " " + word;
+                        if (word.EndsWith("'"))                // Voor zoekwaarden met meerdere woorden, blijf de currentVal uitbreiden tot de ', dan stopt de waarde
+                        {
+                            nextWordIsVal = false;
+                            string upd = "UPDATE " + currentAttr + " SET qf = qf + " + multiplier + " WHERE value = " + currentVal.Trim('(', ')') + ";";
+                            SQLiteCommand cmd = new SQLiteCommand(upd, meta_connection);
+                            cmd.ExecuteNonQuery();
+                            currentVal = "";
+                        }
+                    }
+                    if (nextWordInClause)
+                    {
+                        string tempword = String.Copy(word);
+                        inClauseString = filterChars(tempword);
+                        if (tempword.EndsWith(")"))
+                        {
+                            nextWordInClause = false;
+                            nextWordIsVal = false;
+                            string updjstr = "INSERT INTO jacc VALUES (" + i + ", '" + inClauseString.Trim(')', '\'') + "', " + multiplier + ");";
+                            SQLiteCommand updj = new SQLiteCommand(updjstr, meta_connection);
+                            updj.ExecuteNonQuery();
+                            inClauseString = "";
+                            currentVal = "";
+                            incount++;
+                        }
+                    }
+
+                    if (word == "WHERE") nextWordIsAttr = true;         // Deze statements bepalen of het volgende woord in de loop een attribuutnaam danwel zoekwaarde is
+                    if (word == "AND") nextWordIsAttr = true;
+                    if (word == "=") nextWordIsVal = true;
+                    if (word == ",") nextWordIsVal = true;
+                    if (word == "IN") { nextWordIsVal = true; nextWordInClause = true; }
+                }
+            }
+        }
+
+        public string filterChars(string input)
+        {
+            StringBuilder build = new StringBuilder();
+            foreach (char c in input)
+            {
+                if (c != '(' && c != ')' && c != '\'' && c != '\'')
+                {
+                    if (c == ',') build.Append(' ');
+                    else build.Append(c);
+                }
+            }
+            return build.ToString();
         }
 
         //fills the metadb with idf's
