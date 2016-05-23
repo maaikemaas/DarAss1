@@ -12,7 +12,8 @@ namespace DarAss1
     {
         int k = 10;
         static public double countAutompg = 395;
-        SQLiteConnection metadbconnect;
+        public SQLiteConnection metadbconnect;
+        public SQLiteConnection dbconnect;
 
         // Constructor for the preprocessor, takes the query the user fired as parameter
         public Preprocessor(SQLiteConnection dbconnection)       
@@ -25,6 +26,7 @@ namespace DarAss1
             //create metaDB with tables
             SQLiteConnection meta_connection = createMetaDB();
             this.metadbconnect = meta_connection;
+            this.dbconnect = dbconnection;
 
             //fill metaDB with IDF's
             IDFfill(dbconnection, meta_connection);
