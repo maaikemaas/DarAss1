@@ -10,7 +10,6 @@ namespace DarAss1
 {
     public class Preprocessor
     {
-        int k = 10;
         static public double countAutompg = 395;
         public SQLiteConnection metadbconnect;
         public SQLiteConnection dbconnect;

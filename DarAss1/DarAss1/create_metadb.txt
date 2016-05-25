@@ -1,3 +1,10 @@
+CREATE TABLE jacc (
+queryid integer NOT NULL,
+terms text NOT NULL,
+freq integer NOT NULL,
+PRIMARY KEY(queryid)
+);
+
 CREATE TABLE mpg (
     value real NOT NULL,
     qf integer,

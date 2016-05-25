@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 
 namespace DarAss1
 {
-    class TupleEqualityComparer : IEqualityComparer<Tuple<int, int>>
+    public class TupleEqualityComparer : IEqualityComparer<Tuple<int, int>>
     {
+        public TupleEqualityComparer()
+        { }
+
         public bool Equals(Tuple<int, int> t1, Tuple<int, int> t2)
         {
             if (t1 == null && t2 == null) return true;
