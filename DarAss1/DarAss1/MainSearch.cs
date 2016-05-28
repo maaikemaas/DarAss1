@@ -71,33 +71,86 @@ namespace DarAss1
 
             for (int i = 1; i <= totalReader; i++)
             {
-                float similarity = 0;
+                double similarity = 0;
                 for (int at = 0; at < attr.Count; at++)
                 {
-                    float qfSim = calcQFSimilarity(MainDBConnection, MetaDBConnection, i, at, attr, vals);
+                    double qfSim;
+                    string curAtt = attr[at];
+                    if (curAtt != "brand" && curAtt != "model" && curAtt != "type")        // Numerical QF
+                        qfSim = calcNumericalQFSim(MainDBConnection, MetaDBConnection, i, curAtt, vals[at]);
+                    else qfSim = calcQFSimilarity(MainDBConnection, MetaDBConnection, i, curAtt, vals[at]);       // Catagorical QF
+                    //float idfSim = calcIDFSimilarity(MainDBConnection, MetaDBConnection, i, attr[at], vals[at]);
+                    //similarity += (qfSim * idfSim);
                     similarity += qfSim;
                 }
-                SQLiteCommand UpdateSim = new SQLiteCommand("INSERT INTO aux VALUES (" + i + ", " + similarity + ");");
+                SQLiteCommand UpdateSim = new SQLiteCommand("INSERT INTO aux VALUES (" + i + ", " + similarity + ");", MainDBConnection);
+                UpdateSim.ExecuteNonQuery();
             }
 
-
-
-            string select_topk = "SELECT * FROM autompg GROUP BY ";
+            SQLiteCommand select_topk = new SQLiteCommand("SELECT * FROM aux ORDER BY sim DESC LIMIT 10", MainDBConnection);
+            SQLiteDataReader topkreader = select_topk.ExecuteReader();
+            while(topkreader.Read())
+            {
+                int id = topkreader.GetInt32(0);
+                SQLiteCommand retrievetuple = new SQLiteCommand("SELECT * FROM autompg WHERE id = " + id, MainDBConnection);
+                SQLiteDataReader tuplereader = retrievetuple.ExecuteReader();
+                while(tuplereader.Read())
+                {
+                    for(int i = 0; i < 12; i++)
+                    {
+                        Console.Write(tuplereader.GetValue(i) + " | ");
+                    }
+                }
+                Console.Write("\n");
+            }
         }
 
-        public static float calcQFSimilarity(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, int i, int at, List<string> attr, List<string> vals)
+        public static double calcNumericalQFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, int i, string attr, string val)
         {
-            SQLiteCommand RetrieveVal = new SQLiteCommand("SELECT " + attr[at] + " FROM autompg WHERE id = " + i, MainDBConnection);
+            double value = Convert.ToDouble(val);
+            SQLiteCommand RetrieveMax = new SQLiteCommand("SELECT MAX(qf) FROM " + attr, MetaDBConnection);
+            double maxRQF = Convert.ToDouble(RetrieveMax.ExecuteScalar());
+            SQLiteCommand RetrieveRQF = new SQLiteCommand("SELECT qf FROM " + attr + " WHERE value = '" + value + "'", MetaDBConnection);
+            
+            var rqf = RetrieveRQF.ExecuteScalar();
+            if(rqf == null)
+            {
+                double interp = numericalRetrieve(MetaDBConnection, "qf", attr, value);
+                return (interp / maxRQF);
+            }
+            else
+            {
+                return (Convert.ToDouble(rqf) / maxRQF);
+            }
+        }
+
+        public static double numericalRetrieve(SQLiteConnection MetaDBConnection, string qforidf, string attr, double value)
+        {
+            // Find closest one!
+            SQLiteCommand FindAboveId = new SQLiteCommand("SELECT MIN(value) FROM " + attr + " WHERE value > " + value, MetaDBConnection);
+            double aboveID = Convert.ToDouble(FindAboveId.ExecuteScalar());
+            SQLiteCommand FindBelowId = new SQLiteCommand("SELECT MAX(value) FROM " + attr + " WHERE value < " + value, MetaDBConnection);
+            double belowID = Convert.ToDouble(FindBelowId.ExecuteScalar());
+            SQLiteCommand FindAboveQF = new SQLiteCommand("SELECT " + qforidf + " FROM " + attr + " WHERE value = " + aboveID, MetaDBConnection);
+            double aboveQF = Convert.ToDouble(FindAboveQF.ExecuteScalar());
+            SQLiteCommand FindBelowQF = new SQLiteCommand("SELECT " + qforidf + " FROM " + attr + " WHERE value = " + belowID, MetaDBConnection);
+            double belowQF = Convert.ToDouble(FindBelowQF.ExecuteScalar());
+            double diff = aboveID - belowID;
+            double qfdiff = aboveQF - belowQF;
+            double interpolatedrqf = (qfdiff / diff) * (value - belowID) + belowQF;
+
+            return interpolatedrqf;
+        }
+
+        public static float calcQFSimilarity(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, int i, string attr, string val)   // Only for catagorical
+        {
+            SQLiteCommand RetrieveVal = new SQLiteCommand("SELECT " + attr + " FROM autompg WHERE id = " + i, MainDBConnection);
             var tupleValue = RetrieveVal.ExecuteScalar();
-            SQLiteCommand RetrieveRQF = new SQLiteCommand("SELECT qf FROM " + attr[at] + " WHERE value = '" + tupleValue + "'", MetaDBConnection);
-            int rqfTuple = Convert.ToInt32(RetrieveRQF.ExecuteScalar());
-            SQLiteCommand RetrieveRQFQuery = new SQLiteCommand("SELECT qf FROM " + attr[at] + " WHERE value = '" + vals[at] + "'", MetaDBConnection);
+            SQLiteCommand RetrieveRQFQuery = new SQLiteCommand("SELECT qf FROM " + attr + " WHERE value = '" + val + "'", MetaDBConnection);
             int rqfQuery = Convert.ToInt32(RetrieveRQFQuery.ExecuteScalar());
-            SQLiteCommand RetrieveRQFMax = new SQLiteCommand("SELECT MAX(qf) FROM " + attr[at], MetaDBConnection);
+            SQLiteCommand RetrieveRQFMax = new SQLiteCommand("SELECT MAX(qf) FROM " + attr, MetaDBConnection);
             int rqfMax = Convert.ToInt32(RetrieveRQFMax.ExecuteScalar());
             float qfQuery = (float)rqfQuery / (float)rqfMax;
-            float qfTuple = (float)rqfTuple / (float)rqfMax;
-
 
             //Jaccard Coëfficient: Intersection and Union
 
@@ -111,7 +164,7 @@ namespace DarAss1
                 queriesTuple.Add(new Tuple<int, int>(queryId, querysetFreq));
             }
 
-            SQLiteCommand QuerySetUserCmd = new SQLiteCommand("SELECT queryid, freq FROM jacc WHERE terms LIKE '%" + vals[at] + "%'", MetaDBConnection);
+            SQLiteCommand QuerySetUserCmd = new SQLiteCommand("SELECT queryid, freq FROM jacc WHERE terms LIKE '%" + val + "%'", MetaDBConnection);
             SQLiteDataReader qsuReader = QuerySetUserCmd.ExecuteReader();
             List<Tuple<int, int>> queriesUser = new List<Tuple<int, int>>();
             while (qsuReader.Read())
