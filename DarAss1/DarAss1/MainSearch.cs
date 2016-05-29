@@ -133,6 +133,7 @@ namespace DarAss1
 
         public static double calcNumericalQFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
         {
+            //Console.WriteLine(val);
             double value = Convert.ToDouble(val);
             SQLiteCommand RetrieveMax = new SQLiteCommand("SELECT MAX(qf) FROM " + attr, MetaDBConnection);
             double maxRQF = Convert.ToDouble(RetrieveMax.ExecuteScalar());
