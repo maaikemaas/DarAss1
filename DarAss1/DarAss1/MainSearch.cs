@@ -209,6 +209,9 @@ namespace DarAss1
 
             float jaccardCoef = (float)intersectionSize / (float)unionSize;
             float finalQFSim = jaccardCoef * rqfQuery;
+
+            if (val == tupleValue) finalQFSim = finalQFSim * (float)1.01;
+
             return finalQFSim;
         }
 
