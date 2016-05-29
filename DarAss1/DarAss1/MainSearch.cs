@@ -36,7 +36,7 @@ namespace DarAss1
         {
             topk(input, processor.dbconnect, processor.metadbconnect);
             //put the result of the querying here
-            outputText = "Dit is de input: " + input + ".";
+            outputText = "Zie de console voor het resultaat.";
         }
 
         static void topk(string mainQuery, SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection)
@@ -216,7 +216,6 @@ namespace DarAss1
         public static double getIDFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
         {
             double idf = 0;
-            Console.WriteLine("SELECT idf from " + attr + " WHERE value = '" + val + "'");
             SQLiteCommand command = new SQLiteCommand("SELECT idf from " + attr + " WHERE value = '" + val + "'", MetaDBConnection);
             SQLiteDataReader reader = command.ExecuteReader();
 
