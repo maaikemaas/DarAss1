@@ -162,7 +162,7 @@ namespace DarAss1
         public void createMetaDB(SQLiteConnection dbConnection, SQLiteConnection metadbConnection)
         {
             //input file with sql things
-            string input = new StreamReader("create_metadb.txt").ReadToEnd();
+            string input = new StreamReader("metadb.txt").ReadToEnd();
 
             //create table in sql with input text
             SQLiteCommand command = new SQLiteCommand(input, metadbConnection);
