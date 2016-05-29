@@ -95,7 +95,7 @@ namespace DarAss1
                 UpdateSim.ExecuteNonQuery();
             }
 
-            SQLiteCommand select_topk = new SQLiteCommand("SELECT * FROM aux ORDER BY sim DESC LIMIT 10", MainDBConnection);
+            SQLiteCommand select_topk = new SQLiteCommand("SELECT * FROM aux ORDER BY sim DESC LIMIT + " + k, MainDBConnection);
             SQLiteDataReader topkreader = select_topk.ExecuteReader();
             while(topkreader.Read())
             {
@@ -210,7 +210,7 @@ namespace DarAss1
             float jaccardCoef = (float)intersectionSize / (float)unionSize;
             float finalQFSim = jaccardCoef * rqfQuery;
 
-            if (val == tupleValue) finalQFSim = finalQFSim * (float)1.01;
+            if (val == Convert.ToString(tupleValue)) finalQFSim = finalQFSim * (float)1.01;
 
             return finalQFSim;
         }
