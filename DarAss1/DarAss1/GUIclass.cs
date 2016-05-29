@@ -14,11 +14,13 @@ namespace DarAss1
     {
         private TextBox input;
         private Label output;
-        private Button searchbutton, clearbutton;
+        private Button searchbutton, clearbutton, preprocessbutton;
         MainSearch proc;
+        Preprocessor p;
 
         public GUIclass(Preprocessor p)
         {
+            this.p = p;
             proc = new MainSearch(p);
 
             this.Text = "Ranking on query results";
@@ -26,6 +28,7 @@ namespace DarAss1
             this.ClientSize = new Size(600, 600);
             input = new TextBox();
             output = new Label();
+            preprocessbutton = new Button();
             searchbutton = new Button();
             clearbutton = new Button();
 
@@ -37,14 +40,20 @@ namespace DarAss1
             output.Size = new Size(300, 80);
             output.Text = "Type your query and click on the search button.";
 
-            searchbutton.Location = new Point(450, 20);
-            searchbutton.Size = new Size(80, 60);
+            preprocessbutton.Location = new Point(450, 20);
+            preprocessbutton.Size = new Size(100, 60);
+            preprocessbutton.BackColor = Color.Crimson;
+            preprocessbutton.Text = "preprocessing";
+            preprocessbutton.Click += this.klik;
+
+            searchbutton.Location = new Point(450, 100);
+            searchbutton.Size = new Size(100, 60);
             searchbutton.BackColor = Color.Crimson;
             searchbutton.Text = "search";
             searchbutton.Click += this.klik;
 
-            clearbutton.Location = new Point(450, 100);
-            clearbutton.Size = new Size(80, 60);
+            clearbutton.Location = new Point(450, 180);
+            clearbutton.Size = new Size(100, 60);
             clearbutton.BackColor = Color.Crimson;
             clearbutton.Text = "clear field";
             clearbutton.Click += this.klik;
@@ -52,6 +61,7 @@ namespace DarAss1
 
             this.Controls.Add(input);
             this.Controls.Add(output);
+            this.Controls.Add(preprocessbutton);
             this.Controls.Add(searchbutton);
             this.Controls.Add(clearbutton);
 
@@ -67,13 +77,19 @@ namespace DarAss1
         {
             if (c == 's')
                 proc.Search(input.Text);
-            else
+            else if (c == 'c')
                 Clear();
+            else
+            {
+                input.Text = "Preprocessing...";  input.Refresh();
+                p.createMetaDB(p.dbconnect, p.metadbconnect);
+                input.Text = "Preprocessing done.";
+            }              
         }
 
         private void Clear()
         {
-            input.Text = "";
+            input.Text = "";    
             proc.Clear();
         }
     }

@@ -13,7 +13,7 @@ namespace DarAss1
         public Preprocessor processor;
 
         //constructor method for mainsearch class
-        public MainSearch (Preprocessor p)
+        public MainSearch(Preprocessor p)
         {
             this.processor = p;
         }
@@ -29,6 +29,7 @@ namespace DarAss1
         {
             outputText = "";
         }
+
 
         //main searchmethod. Gets input and 'returns' the results
         public void Search(string input)
@@ -144,8 +145,5 @@ namespace DarAss1
             }
             return build.ToString();
         }
-
     }
-
-
 }

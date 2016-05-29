@@ -21,16 +21,17 @@ namespace DarAss1
             System.Globalization.CultureInfo dotProblem = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
             dotProblem.NumberFormat.NumberDecimalSeparator = ".";
             System.Threading.Thread.CurrentThread.CurrentCulture = dotProblem;
-            
-            //create metaDB with tables
-            SQLiteConnection meta_connection = createMetaDB();
-            this.metadbconnect = meta_connection;
-            this.dbconnect = dbconnection;
 
-            //fill metaDB with IDF's
-            IDFfill(dbconnection, meta_connection);
-            //fill metaDB with QF's
-            QFSimilarity(meta_connection);
+            //make connection to database
+            SQLiteConnection.CreateFile("metaDB.sqlite");
+            SQLiteConnection metadbConnection;
+            metadbConnection = new SQLiteConnection("Data Source=metaDB.sqlite;Version=3;");
+            metadbConnection.Open();
+
+            //create metaDB with tables
+            //SQLiteConnection meta_connection = createMetaDB();
+            this.metadbconnect = metadbConnection;
+            this.dbconnect = dbconnection;
         }
 
         // Updates the metaDB with the QF similarity between the query the user fired and every tuple in the main DB
@@ -158,14 +159,8 @@ namespace DarAss1
         }
 
         //create the metadb and the tables
-        public SQLiteConnection createMetaDB()
+        public void createMetaDB(SQLiteConnection dbConnection, SQLiteConnection metadbConnection)
         {
-            //make connection to database
-            SQLiteConnection.CreateFile("metaDB.sqlite");
-            SQLiteConnection metadbConnection;
-            metadbConnection = new SQLiteConnection("Data Source=metaDB.sqlite;Version=3;");
-            metadbConnection.Open();
-
             //input file with sql things
             string input = new StreamReader("create_metadb.txt").ReadToEnd();
 
@@ -173,7 +168,11 @@ namespace DarAss1
             SQLiteCommand command = new SQLiteCommand(input, metadbConnection);
             command.ExecuteNonQuery();
 
-            return metadbConnection;
+            //fill metaDB with IDF's
+            IDFfill(dbConnection, metadbConnection);
+            //fill metaDB with QF's
+            QFSimilarity(metadbConnection);
+
         }
     }
 }
