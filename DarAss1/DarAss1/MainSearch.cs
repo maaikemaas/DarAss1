@@ -11,9 +11,11 @@ namespace DarAss1
     {
         private string outputText;
         public Preprocessor processor;
+        public List<string> mainAttributes = new List<string>()        // List which contains all attribute names of autompg
+        {"mpg","cylinders","displacement","horsepower","weight","acceleration","model_year","origin","brand","model","type"};
 
-        //constructor method for mainsearch class
-        public MainSearch(Preprocessor p)
+    //constructor method for mainsearch class
+    public MainSearch(Preprocessor p)
         {
             this.processor = p;
         }
@@ -39,14 +41,14 @@ namespace DarAss1
             outputText = "Zie de console voor het resultaat.";
         }
 
-        static void topk(string mainQuery, SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection)
+        public void topk(string mainQuery, SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection)
         {
-            SQLiteCommand findTotal = new SQLiteCommand("SELECT COUNT(*) FROM autompg", MainDBConnection);
+            SQLiteCommand findTotal = new SQLiteCommand("SELECT COUNT(*) FROM autompg", MainDBConnection);      // Total # of entries in the main db
             int totalReader = Convert.ToInt32(findTotal.ExecuteScalar());
 
-            int k = 10;
-            List<string> attr = new List<string>();
-            List<string> vals = new List<string>();
+            int k = 10;                                     // k default 10 if not given by user
+            List<string> attr = new List<string>();         // Will contain all attributes specified in user query
+            List<string> vals = new List<string>();         // Values corresponding to List<string> attr
             string[] querywords = mainQuery.Split();
             bool nextWordIsAttr = true;
             bool nextWordIsVal = false;
@@ -56,7 +58,7 @@ namespace DarAss1
                 k = Int32.Parse(querywords[2].Trim(','));
                 startLoop = 3;
             }
-            for (int i = startLoop; i < querywords.Length; i++)
+            for (int i = startLoop; i < querywords.Length; i++)             // Filling List<string> attr, List<string> vals
             {
                 string word = querywords[i];
                 if (nextWordIsAttr) attr.Add(filterChars(word)); nextWordIsAttr = false;
@@ -66,11 +68,11 @@ namespace DarAss1
                 if (word.EndsWith(",")) nextWordIsAttr = true;
             }
 
-            string createAuxTable = "CREATE TABLE aux ( tupid integer NOT NULL, sim real NOT NULL, PRIMARY KEY(tupid) );";
+            string createAuxTable = "CREATE TABLE aux ( tupid integer NOT NULL, sim real NOT NULL, PRIMARY KEY(tupid) );";   // Create new table to hold all scores
             SQLiteCommand cmd = new SQLiteCommand(createAuxTable, MainDBConnection);
             cmd.ExecuteNonQuery();
 
-            for (int i = 1; i <= totalReader; i++)
+            for (int i = 1; i <= totalReader; i++)                      // Loop through all main db entries to score them 
             {
                 double similarity = 0;
                 for (int at = 0; at < attr.Count; at++)
@@ -80,8 +82,8 @@ namespace DarAss1
                     string curAtt = attr[at];
                     if (curAtt != "brand" && curAtt != "model" && curAtt != "type")        // Numerical QF/IDF
                     {
-                        qfSim = calcNumericalQFSim(MainDBConnection, MetaDBConnection, i, curAtt, vals[at]);
-                        idfSim = calcNumericalIDFSim(MainDBConnection, MetaDBConnection, i, curAtt, vals[at]);
+                        qfSim = calcNumericalQFSim(MainDBConnection, MetaDBConnection, curAtt, vals[at]);
+                        idfSim = calcNumericalIDFSim(MainDBConnection, MetaDBConnection, curAtt, vals[at]);
                     }
                     else
                     {
@@ -91,6 +93,22 @@ namespace DarAss1
                     similarity += (qfSim * idfSim);
                     //similarity += qfSim;
                 }
+
+                for (int a = 0; a < mainAttributes.Count; a++)           // Add global importance of missing attributes
+                {
+                    if (attr.Contains(mainAttributes[a]) == false)       // mainAttributes[a] is missing from user query
+                    {
+                        SQLiteCommand retrval = new SQLiteCommand("SELECT " + mainAttributes[a] + " FROM autompg WHERE id = " + i, MainDBConnection);
+                        var tupleval = retrval.ExecuteScalar();
+                        double missingqf;
+                        if (mainAttributes[a] != "brand" && mainAttributes[a] != "model" && mainAttributes[a] != "type")
+                            missingqf = calcNumericalQFSim(MainDBConnection, MetaDBConnection, mainAttributes[a], Convert.ToString(tupleval));
+                        else
+                            missingqf = calcMissingQF(MetaDBConnection, mainAttributes[a], Convert.ToString(tupleval));
+                        if (!double.IsNaN(missingqf)) similarity += (missingqf > 1) ? Math.Log10(missingqf) : missingqf;
+                    }
+                }
+
                 SQLiteCommand UpdateSim = new SQLiteCommand("INSERT INTO aux VALUES (" + i + ", " + similarity + ");", MainDBConnection);
                 UpdateSim.ExecuteNonQuery();
             }
@@ -113,7 +131,7 @@ namespace DarAss1
             }
         }
 
-        public static double calcNumericalQFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, int i, string attr, string val)
+        public static double calcNumericalQFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
         {
             double value = Convert.ToDouble(val);
             SQLiteCommand RetrieveMax = new SQLiteCommand("SELECT MAX(qf) FROM " + attr, MetaDBConnection);
@@ -132,7 +150,7 @@ namespace DarAss1
             }
         }
 
-        public static double calcNumericalIDFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, int i, string attr, string val)
+        public static double calcNumericalIDFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
         {
             double value = Convert.ToDouble(val);
             SQLiteCommand RetrieveMax = new SQLiteCommand("SELECT MAX(idf) FROM " + attr, MetaDBConnection);
@@ -154,9 +172,9 @@ namespace DarAss1
         public static double numericalRetrieve(SQLiteConnection MetaDBConnection, string qforidf, string attr, double value)
         {
             // Find closest one!
-            SQLiteCommand FindAboveId = new SQLiteCommand("SELECT MIN(value) FROM " + attr + " WHERE value > " + value, MetaDBConnection);
+            SQLiteCommand FindAboveId = new SQLiteCommand("SELECT MIN(value) FROM " + attr + " WHERE value >= " + value, MetaDBConnection);
             double aboveID = Convert.ToDouble(FindAboveId.ExecuteScalar());
-            SQLiteCommand FindBelowId = new SQLiteCommand("SELECT MAX(value) FROM " + attr + " WHERE value < " + value, MetaDBConnection);
+            SQLiteCommand FindBelowId = new SQLiteCommand("SELECT MAX(value) FROM " + attr + " WHERE value <= " + value, MetaDBConnection);
             double belowID = Convert.ToDouble(FindBelowId.ExecuteScalar());
             SQLiteCommand FindAboveQF = new SQLiteCommand("SELECT " + qforidf + " FROM " + attr + " WHERE value = " + aboveID, MetaDBConnection);
             double aboveQF = Convert.ToDouble(FindAboveQF.ExecuteScalar());
@@ -209,11 +227,20 @@ namespace DarAss1
 
             float jaccardCoef = (float)intersectionSize / (float)unionSize;
             float finalQFSim = jaccardCoef * rqfQuery;
+
+            if (Convert.ToString(tupleValue) == val) finalQFSim = finalQFSim * (float)1.01;
             return finalQFSim;
         }
 
-        //returns the idf of the query item
-        public static double getIDFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
+        public static double calcMissingQF(SQLiteConnection MetaDBConnection, string attr, string value)        // Also only for categorical
+        {
+            SQLiteCommand retr = new SQLiteCommand("SELECT qf FROM " + attr + " WHERE value = '" + value + "'", MetaDBConnection);
+            int rqf = Convert.ToInt32(retr.ExecuteScalar());
+            return rqf;
+        }
+
+    //returns the idf of the query item
+    public static double getIDFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
         {
             double idf = 0;
             SQLiteCommand command = new SQLiteCommand("SELECT idf from " + attr + " WHERE value = '" + val + "'", MetaDBConnection);
