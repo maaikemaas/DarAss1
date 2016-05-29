@@ -41,6 +41,7 @@ namespace DarAss1
             outputText = "Zie de console voor het resultaat.";
         }
 
+        //method for finding top k results
         public void topk(string mainQuery, SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection)
         {
             SQLiteCommand findTotal = new SQLiteCommand("SELECT COUNT(*) FROM autompg", MainDBConnection);      // Total # of entries in the main db
@@ -129,6 +130,9 @@ namespace DarAss1
                 }
                 Console.Write("\n");
             }
+
+            SQLiteCommand dropcommand = new SQLiteCommand("DROP TABLE aux", MainDBConnection);
+            dropcommand.ExecuteNonQuery();
         }
 
         public static double calcNumericalQFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
