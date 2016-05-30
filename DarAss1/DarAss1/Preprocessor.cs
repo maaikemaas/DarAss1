@@ -168,10 +168,25 @@ namespace DarAss1
             SQLiteCommand command = new SQLiteCommand(input, metadbConnection);
             command.ExecuteNonQuery();
 
+            fillMetaDB(dbConnection, metadbConnection);
+        }
+
+        public void fillMetaDB(SQLiteConnection dbConnection, SQLiteConnection metadbConnection)
+        {
             //fill metaDB with IDF's
             IDFfill(dbConnection, metadbConnection);
             //fill metaDB with QF's
             QFSimilarity(metadbConnection);
+        }
+
+        public void metaLoadFill(SQLiteConnection dbConnection, SQLiteConnection metadbConnection)
+        {
+
+            string input = new StreamReader("metaload2.txt").ReadToEnd();
+
+            //create table in sql with input text
+            SQLiteCommand command2 = new SQLiteCommand(input, metadbConnection);
+            command2.ExecuteNonQuery();
 
         }
     }

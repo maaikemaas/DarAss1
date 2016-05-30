@@ -82,7 +82,7 @@ namespace DarAss1
             else
             {
                 input.Text = "Preprocessing...";  input.Refresh();
-                p.createMetaDB(p.dbconnect, p.metadbconnect);
+                p.fillMetaDB(p.dbconnect, p.metadbconnect);
                 input.Text = "Preprocessing done.";
             }              
         }

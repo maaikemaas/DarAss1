@@ -29,6 +29,9 @@ namespace DarAss1
             command.ExecuteNonQuery();
 
             Preprocessor p = new Preprocessor(m_dbConnection);
+
+            p.createMetaDB(p.dbconnect, p.metadbconnect);
+            p.metaLoadFill(p.dbconnect, p.metadbconnect);
            
             //string test_query = "k = 6, brand = 'volkswagen', cylinders = '6', mpg = '45';";
 
