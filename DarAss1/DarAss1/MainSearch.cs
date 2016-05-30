@@ -36,13 +36,12 @@ namespace DarAss1
         //main searchmethod. Gets input and 'returns' the results
         public void Search(string input)
         {
-            topk(input, processor.dbconnect, processor.metadbconnect);
             //put the result of the querying here
-            outputText = "Zie de console voor het resultaat.";
+            outputText = topk(input, processor.dbconnect, processor.metadbconnect);
         }
 
         //method for finding top k results
-        public void topk(string mainQuery, SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection)
+        public string topk(string mainQuery, SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection)
         {
             SQLiteCommand findTotal = new SQLiteCommand("SELECT COUNT(*) FROM autompg", MainDBConnection);      // Total # of entries in the main db
             int totalReader = Convert.ToInt32(findTotal.ExecuteScalar());
@@ -114,6 +113,10 @@ namespace DarAss1
                 UpdateSim.ExecuteNonQuery();
             }
 
+            StringBuilder result = new StringBuilder();
+
+            result.Append("id | mpg | cyl. | displ. | bph | weight | 0-100 | year | origin | brand | model | type \n \n");
+
             SQLiteCommand select_topk = new SQLiteCommand("SELECT * FROM aux ORDER BY sim DESC LIMIT + " + k, MainDBConnection);
             SQLiteDataReader topkreader = select_topk.ExecuteReader();
             while(topkreader.Read())
@@ -121,23 +124,25 @@ namespace DarAss1
                 int id = topkreader.GetInt32(0);
                 SQLiteCommand retrievetuple = new SQLiteCommand("SELECT * FROM autompg WHERE id = " + id, MainDBConnection);
                 SQLiteDataReader tuplereader = retrievetuple.ExecuteReader();
+                int rank = 0;
                 while(tuplereader.Read())
                 {
                     for(int i = 0; i < 12; i++)
                     {
-                        Console.Write(tuplereader.GetValue(i) + " | ");
+                        result.Append(tuplereader.GetValue(i) + " | ");
                     }
                 }
-                Console.Write("\n");
+                result.Append("\n");
             }
 
             SQLiteCommand dropcommand = new SQLiteCommand("DROP TABLE aux", MainDBConnection);
             dropcommand.ExecuteNonQuery();
+
+            return result.ToString();
         }
 
         public static double calcNumericalQFSim(SQLiteConnection MainDBConnection, SQLiteConnection MetaDBConnection, string attr, string val)
         {
-            //Console.WriteLine(val);
             double value = Convert.ToDouble(val);
             SQLiteCommand RetrieveMax = new SQLiteCommand("SELECT MAX(qf) FROM " + attr, MetaDBConnection);
             double maxRQF = Convert.ToDouble(RetrieveMax.ExecuteScalar());
@@ -177,9 +182,9 @@ namespace DarAss1
         public static double numericalRetrieve(SQLiteConnection MetaDBConnection, string qforidf, string attr, double value)
         {
             // Find closest one!
-            SQLiteCommand FindAboveId = new SQLiteCommand("SELECT MIN(value) FROM " + attr + " WHERE value >= " + value, MetaDBConnection);
+            SQLiteCommand FindAboveId = new SQLiteCommand("SELECT MIN(value) FROM " + attr + " WHERE " + qforidf + " >= 0 AND value >= " + value, MetaDBConnection);
             double aboveID = Convert.ToDouble(FindAboveId.ExecuteScalar());
-            SQLiteCommand FindBelowId = new SQLiteCommand("SELECT MAX(value) FROM " + attr + " WHERE value <= " + value, MetaDBConnection);
+            SQLiteCommand FindBelowId = new SQLiteCommand("SELECT MAX(value) FROM " + attr + " WHERE " + qforidf + " >= 0 AND value <= " + value, MetaDBConnection);
             double belowID = Convert.ToDouble(FindBelowId.ExecuteScalar());
             SQLiteCommand FindAboveQF = new SQLiteCommand("SELECT " + qforidf + " FROM " + attr + " WHERE value = " + aboveID, MetaDBConnection);
             double aboveQF = Convert.ToDouble(FindAboveQF.ExecuteScalar());

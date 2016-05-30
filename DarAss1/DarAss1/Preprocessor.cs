@@ -137,13 +137,11 @@ namespace DarAss1
                         double doubleValue = reader.GetDouble(0);
                         value = doubleValue.ToString();
                     }
-
-
-                        idf = calcIDF(attributeArray[t], value, connectionDB);
-                        //insert row into attribute table (insert: value,qf,idf)
-                        string input = "INSERT into " + attributeArray[t] + " VALUES('" + value + "', -1 , " + idf + ")";
-                        SQLiteCommand command2 = new SQLiteCommand(input, connectionMetaDB);
-                        command2.ExecuteNonQuery();
+                    idf = calcIDF(attributeArray[t], value, connectionDB);
+                    //insert row into attribute table (insert: value,qf,idf)
+                    string input = "INSERT into " + attributeArray[t] + " VALUES('" + value + "', -1 , " + idf + ")";
+                    SQLiteCommand command2 = new SQLiteCommand(input, connectionMetaDB);
+                    command2.ExecuteNonQuery();
                 }
             }
         }
@@ -168,26 +166,25 @@ namespace DarAss1
             SQLiteCommand command = new SQLiteCommand(input, metadbConnection);
             command.ExecuteNonQuery();
 
-            fillMetaDB(dbConnection, metadbConnection);
+            //fillMetaDB(dbConnection, metadbConnection);
         }
 
         public void fillMetaDB(SQLiteConnection dbConnection, SQLiteConnection metadbConnection)
         {
+            createMetaDB(dbConnection, metadbConnection);
             //fill metaDB with IDF's
             IDFfill(dbConnection, metadbConnection);
             //fill metaDB with QF's
             QFSimilarity(metadbConnection);
         }
 
-        public void metaLoadFill(SQLiteConnection dbConnection, SQLiteConnection metadbConnection)
+        public void metaLoadFill(SQLiteConnection metadbConnection)
         {
-
-            string input = new StreamReader("metaload2.txt").ReadToEnd();
+            string input = new StreamReader("metaload.txt").ReadToEnd();
 
             //create table in sql with input text
             SQLiteCommand command2 = new SQLiteCommand(input, metadbConnection);
             command2.ExecuteNonQuery();
-
         }
     }
 }
