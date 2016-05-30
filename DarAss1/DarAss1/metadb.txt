@@ -1,84 +1,95 @@
-CREATE TABLE jacc (
-queryid integer NOT NULL,
-terms text NOT NULL,
-freq integer NOT NULL,
-PRIMARY KEY(queryid)
+CREATE TABLE jacc
+(
+	queryid integer NOT NULL,
+	terms text NOT NULL,
+	freq integer NOT NULL,
+	PRIMARY KEY(queryid)
 );
 
-CREATE TABLE mpg (
-    value real NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE mpg
+(
+	value real NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value) 
 );
 
-CREATE TABLE cylinders (
-    value integer NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE cylinders
+(
+	value integer NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE displacement (
-    value real NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE displacement
+(
+	value real NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE horsepower (
-    value real NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE horsepower
+(
+	value real NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE weight (
-    value real NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE weight 
+(
+	value real NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE acceleration (
-    value real NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE acceleration
+(	
+	value real NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE model_year (
-    value integer NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE model_year
+(
+	value integer NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE origin (
-    value integer NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE origin
+(
+	value integer NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE brand (
-    value text NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE brand
+(
+	value text NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE model (
-    value text NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE model
+(
+	value text NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
 
-CREATE TABLE type (
-    value text NOT NULL,
-    qf integer,
-    idf integer,
-    PRIMARY KEY (value)
+CREATE TABLE type
+(
+	value text NOT NULL,
+	qf integer,
+	idf integer,
+	PRIMARY KEY(value)
 );
-

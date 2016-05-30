@@ -62,7 +62,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="create_metadb.txt" />
+    <Content Include="autotable.txt" />
+    <Content Include="metadb.txt" />
+    <Content Include="metaload.txt" />
+    <Content Include="workload.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
